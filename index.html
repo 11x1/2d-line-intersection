@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="screen" width="800px" height="1000px" style="border: red 1px solid"></canvas>
+
+    <script>
+        const canvas = document.getElementById( 'screen' )
+        const ctx = canvas.getContext( '2d' )
+
+        let rand_line = {
+            x1 : Math.random( ) * canvas.width,
+            y1 : Math.random( ) * canvas.height,
+            x2 : Math.random( ) * canvas.width,
+            y2 : Math.random( ) * canvas.height
+        }
+
+        let line_random = {
+            x1 : Math.min( rand_line.x1, rand_line.x2 ),
+            y1 : Math.min( rand_line.y1, rand_line.y2 ),
+            x2 : Math.max( rand_line.x1, rand_line.x2 ),
+            y2 : Math.max( rand_line.y1, rand_line.y2 ),
+        }
+
+        let line_to_mouse = {
+            x1 : Math.random( ) * canvas.width,
+            y1 : Math.random( ) * canvas.height,
+            x2 : 0,
+            y2 : 0
+        }
+
+        let mouse_pos = {
+            x : 0,
+            y : 0
+        }
+
+        let find_intersect = ( x1, y1, x2, y2, x3, y3, x4, y4 ) => {
+            let s1 = {
+                x : x2 - x1,
+                y : y2 - y1
+            }
+
+            let s2 = {
+                x : x4 - x3,
+                y : y4 - y3
+            }
+
+            if ( s2.y * s1.x === s1.y * s2.x ) {
+                return {
+                    intersect : false,
+                    x : null,
+                    y : null
+                }
+            }
+
+            let y = ( s2.y * s1.x * y1 - s1.y * s2.x * y3 + s1.y * s2.y * ( x3 - x1 ) ) / ( s2.y * s1.x - s1.y * s2.x )
+
+            let x = s1.x * ( ( y - y1 ) / s1.y ) + x1;
+
+            return {
+                intersect : true,
+                x : x,
+                y : y
+            }
+        }
+
+        let draw = ( ) => {
+            ctx.clearRect( 0, 0, canvas.width, canvas.height )
+
+            ctx.beginPath( );
+            ctx.moveTo( line_random.x1, line_random.y1 );
+            ctx.lineTo( line_random.x2, line_random.y2 );
+            ctx.stroke( );
+
+            // find mouse pos
+            let canvas_pos = canvas.getBoundingClientRect( );
+            line_to_mouse.x2 = mouse_pos.x - canvas_pos.left;
+            line_to_mouse.y2 = mouse_pos.y - canvas_pos.top;
+
+            let min_max_mousepos = {
+                x1 : Math.min( line_to_mouse.x1, line_to_mouse.x2 ),
+                y1 : Math.min( line_to_mouse.y1, line_to_mouse.y2 ),
+                x2 : Math.max( line_to_mouse.x1, line_to_mouse.x2 ),
+                y2 : Math.max( line_to_mouse.y1, line_to_mouse.y2 ),
+            }
+
+            ctx.beginPath( );
+            ctx.moveTo( line_to_mouse.x1, line_to_mouse.y1 );
+            ctx.lineTo( line_to_mouse.x2, line_to_mouse.y2 );
+            ctx.stroke( );
+
+            let a = find_intersect( line_to_mouse.x1, line_to_mouse.y1, line_to_mouse.x2, line_to_mouse.y2, line_random.x1, line_random.y1, line_random.x2, line_random.y2 );
+
+            
+            let in_bounds = a.x > line_random.x1 && a.x < line_random.x2 && a.y > line_random.y1 && a.y < line_random.y2;
+            let in_bounds2 = a.x > min_max_mousepos.x1 && a.x < min_max_mousepos.x2 && a.y > min_max_mousepos.y1 && a.y < min_max_mousepos.y2
+
+            if ( a.intersect && in_bounds && in_bounds2 ) {
+                ctx.beginPath( );
+                ctx.arc( a.x, a.y, 10, 0, 2 * Math.PI );
+                ctx.fill( );
+            }
+
+            requestAnimationFrame( draw )
+        }
+
+        document.body.addEventListener( 'mousemove', ( e ) => {
+            mouse_pos.x = e.offsetX;
+            mouse_pos.y = e.offsetY;
+        } )
+
+        requestAnimationFrame( draw )
+    </script>
+</body>
+</html>
